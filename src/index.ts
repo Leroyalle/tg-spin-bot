@@ -231,4 +231,9 @@ cron.schedule('0 30 18 * * *', async () => {
   }
 });
 
-bot.launch();
+bot.launch({
+  webhook: {
+    domain: process.env.WEBHOOK_URL as string,
+    port: 3000,
+  },
+});
