@@ -6,7 +6,6 @@ import { dailyTextsTable, Gift, giftsTable, usersTable } from './db/schema';
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import cron from 'node-cron';
 import { calculateDailySpins } from './utils/calculate-daily-spins.util';
-import { OpenRouter } from '@openrouter/sdk';
 import { sleep } from './utils/sleep.utilt';
 import { sendForbidden } from './utils/send-forbidden.util';
 
@@ -22,15 +21,11 @@ const db = drizzle(process.env.DATABASE_URL!, {
   logger: true,
 });
 
-const openrouter = new OpenRouter({
-  apiKey: process.env.AI_API_KEY,
-});
-
-const asyaId = process.env.ASYA_ID as string;
+const asyaId = Number(process.env.ASYA_ID);
 
 bot.start(async ctx => {
   try {
-    const result = await sendForbidden(ctx, Number(asyaId));
+    const result = await sendForbidden(ctx, asyaId);
     if (!result) return;
 
     const [user] = await db
@@ -52,9 +47,25 @@ bot.start(async ctx => {
   }
 });
 
+bot.command('support', async ctx => {
+  try {
+    console.log('support');
+    const result = await sendForbidden(ctx, asyaId);
+    if (!result) return;
+    return await ctx.reply(`По всем вопросам обращаться к Николаю - @saintLeroyalle (Николай)\n
+Владелец - @saintLeroyalle (Николай)
+Тех.поддержка  - @saintLeroyalle (Николай)
+Разработчик -  @saintLeroyalle (Николай)
+Топ-менеджер - @saintLeroyalle (Николай)`);
+  } catch (error) {
+    console.log('SUPPORT ERROR', error);
+    return await ctx.reply('Что-то пошло не так! 🙁 Обратитесь к Николаю');
+  }
+});
+
 bot.command('spin', async ctx => {
   try {
-    const result = await sendForbidden(ctx, Number(asyaId));
+    const result = await sendForbidden(ctx, asyaId);
     if (!result) return;
 
     let [user] = await db
@@ -160,7 +171,7 @@ cron.schedule('0 0 10 * * *', async () => {
     const [user] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.userName, 'saintLeroyalle'))
+      .where(eq(usersTable.telegramId, asyaId))
       .limit(1);
 
     if (!user) return;
@@ -200,7 +211,7 @@ cron.schedule('0 30 18 * * *', async () => {
     const [user] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.userName, 'asechx'))
+      .where(eq(usersTable.telegramId, asyaId))
       .limit(1);
 
     if (!user) return;
@@ -210,7 +221,7 @@ cron.schedule('0 30 18 * * *', async () => {
     if (spins === 1) {
       return await bot.telegram.sendMessage(
         user.telegramId,
-        '🎀 У тебя сегодня есть попытка открыть подарок',
+        '🎀 У тебя сегодня есть попытка открыть подарок!',
       );
     }
 
