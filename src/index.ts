@@ -9,18 +9,43 @@ import { calculateDailySpins } from './utils/calculate-daily-spins.util';
 import { sleep } from './utils/sleep.utilt';
 import { sendForbidden } from './utils/send-forbidden.util';
 
-const app = express();
-app.get('/', (_, res) => res.send('ok'));
-app.use('/static', express.static('public'));
-app.listen(3000, () => {
-  console.log('listening on port 3000');
+const bot = new Telegraf(process.env.BOT_API_TOKEN as string);
+
+async function main() {
+  const app = express();
+
+  const PORT = Number(process.env.PORT) || 3000;
+  const WEBHOOK_URL = process.env.WEBHOOK_URL;
+  if (!WEBHOOK_URL) throw new Error('WEBHOOK_URL is not defined');
+
+  app.get('/', (_, res) => res.send('ok'));
+  app.use('/static', express.static('public'));
+
+  app.use(await bot.createWebhook({ domain: WEBHOOK_URL }));
+
+  app.listen(PORT, () => {
+    console.log('listening on port', PORT);
+  });
+}
+
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
 });
 
-const bot = new Telegraf(process.env.BOT_API_TOKEN as string);
+// const app = express();
+// app.get('/', (_, res) => res.send('ok'));
+// app.use('/static', express.static('public'));
+// app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL! }));
+// const PORT = Number(process.env.PORT) || 3000;
+
+// app.listen(PORT, () => {
+//   console.log('listening on port', PORT);
+// });
+
 const db = drizzle(process.env.DATABASE_URL!, {
   logger: true,
 });
-
 const asyaId = Number(process.env.ASYA_ID);
 
 bot.start(async ctx => {
