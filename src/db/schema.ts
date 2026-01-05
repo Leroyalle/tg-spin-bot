@@ -1,11 +1,14 @@
-import { bigint } from 'drizzle-orm/pg-core';
-import { integer, pgTable, varchar } from 'drizzle-orm/pg-core';
+import { bigint, timestamp, integer, pgTable, varchar, boolean } from 'drizzle-orm/pg-core';
+import { pgEnum } from 'drizzle-orm/pg-core';
+
+export const moodEnum = pgEnum('mood', ['warm', 'calm', 'playful', 'neutral']);
 
 export const usersTable = pgTable('users', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar({ length: 255 }).notNull(),
   userName: varchar({ length: 255 }),
   telegramId: bigint({ mode: 'number' }).notNull().unique(),
+  lastSpinAt: timestamp({ withTimezone: false }),
 });
 
 export const giftsTable = pgTable('gifts', {
@@ -13,6 +16,15 @@ export const giftsTable = pgTable('gifts', {
   name: varchar({ length: 255 }).notNull(),
   reward: integer().notNull(),
   weight: integer().notNull(),
+});
+
+export const dailyTextsTable = pgTable('daily_texts', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  text: varchar({ length: 500 }).notNull(),
+  mood: moodEnum('mood').notNull(),
+  isActive: boolean().default(true).notNull(),
+
+  lastUsedAt: timestamp({ withTimezone: false }),
 });
 
 export type Gift = typeof giftsTable.$inferSelect;
