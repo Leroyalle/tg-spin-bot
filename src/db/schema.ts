@@ -16,6 +16,7 @@ export const giftsTable = pgTable('gifts', {
   name: varchar({ length: 255 }).notNull(),
   reward: integer().notNull(),
   weight: integer().notNull(),
+  coef: integer().notNull().default(1),
 });
 
 export const dailyTextsTable = pgTable('daily_texts', {

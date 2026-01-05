@@ -4,7 +4,6 @@ import { Telegraf } from 'telegraf';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Gift, giftsTable, usersTable } from './db/schema';
 import { eq } from 'drizzle-orm';
-import { sleep } from './utils/sleep.utilt';
 import cron from 'node-cron';
 import { calculateDailySpins } from './utils/calculate-daily-spins.util';
 import { OpenRouter } from '@openrouter/sdk';
@@ -67,15 +66,13 @@ bot.command('spin', async ctx => {
 
     // await ctx.telegram.editMessageText(msg.chat.id, msg.message_id, undefined, '🎁 Готово.');
     const gifts = await db.select().from(giftsTable);
-    const reversedWeight = gifts.map(gift => {
-      return {
-        ...gift,
-        weight: 1 / gift.weight,
-      };
-    });
+    const weightedGifts = gifts.map(gift => ({
+      ...gift,
+      rollWeight: gift.coef * (1 / gift.weight),
+    }));
 
-    const sum = reversedWeight.reduce((acc, gift) => {
-      acc += gift.weight;
+    const sum = weightedGifts.reduce((acc, gift) => {
+      acc += gift.rollWeight;
       return acc;
     }, 0);
 
@@ -83,8 +80,8 @@ bot.command('spin', async ctx => {
 
     let prize: Gift | null = null;
     let acc: number = 0;
-    for (const gift of reversedWeight) {
-      acc += gift.weight;
+    for (const gift of weightedGifts) {
+      acc += gift.rollWeight;
       if (randomInt <= acc) {
         prize = gift;
         break;
