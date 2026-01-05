@@ -2,6 +2,7 @@ import { bigint, timestamp, integer, pgTable, varchar, boolean } from 'drizzle-o
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 export const moodEnum = pgEnum('mood', ['warm', 'calm', 'playful', 'neutral']);
+export const giftTypeEnum = pgEnum('gift_type', ['gift', 'nothing', 'action', 'text']);
 
 export const usersTable = pgTable('users', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -17,6 +18,7 @@ export const giftsTable = pgTable('gifts', {
   reward: integer().notNull(),
   weight: integer().notNull(),
   coef: integer().notNull().default(1),
+  type: giftTypeEnum().notNull().default('gift'),
 });
 
 export const dailyTextsTable = pgTable('daily_texts', {
@@ -24,7 +26,6 @@ export const dailyTextsTable = pgTable('daily_texts', {
   text: varchar({ length: 500 }).notNull(),
   mood: moodEnum('mood').notNull(),
   isActive: boolean().default(true).notNull(),
-
   lastUsedAt: timestamp({ withTimezone: false }),
 });
 
